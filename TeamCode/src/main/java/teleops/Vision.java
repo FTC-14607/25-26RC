@@ -44,7 +44,6 @@ public class Vision extends LinearOpMode {
                 telemetry.addData("pitch", tag.ftcPose.pitch);
                 telemetry.addData("yaw", tag.ftcPose.yaw);
                 telemetry.update();
-
             }
         }
     }
