@@ -22,7 +22,8 @@ public class OdoViewer extends LinearOpMode {
     public void runOpMode() {
         bot = new Tyrone(this);
 
-        // Mirror phone telemetry to Dashboard
+        // Mirror phone tel
+        // emetry to Dashboard
         dash = FtcDashboard.getInstance();
         telemetry = new MultipleTelemetry(telemetry, dash.getTelemetry());
 
@@ -45,7 +46,7 @@ public class OdoViewer extends LinearOpMode {
 
                 TelemetryPacket pkt = new TelemetryPacket();
                 Canvas c = pkt.fieldOverlay();
-                // simple robot glyph + heading ray
+
                 c.strokeCircle(x, y, 7);
                 double hx = x + 10 * Math.cos(Math.toRadians(headingDeg));
                 double hy = y + 10 * Math.sin(Math.toRadians(headingDeg));
@@ -54,6 +55,7 @@ public class OdoViewer extends LinearOpMode {
             } else {
                 telemetry.addLine("Pose not yet available");
             }
+
             telemetry.update();
         }
     }
