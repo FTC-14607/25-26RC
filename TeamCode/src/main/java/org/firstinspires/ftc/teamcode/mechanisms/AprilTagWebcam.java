@@ -19,7 +19,7 @@ public class AprilTagWebcam {
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
 
-    private List<AprilTagDetection> detectedTags  new ArrayList<>();
+    private List<AprilTagDetection> detectedTags = new ArrayList<>();
 
     private Telemetry telemetry;
 
