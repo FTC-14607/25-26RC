@@ -51,6 +51,29 @@ public class AprilTagWebcam {
         return detectedTags;
     }
 
+    public String getPattern(List<AprilTagDetection> detections) {
+        if (detections == null || detections.isEmpty()) {
+            return "";
+        }
+
+        for (AprilTagDetection det : detections) {
+            int id = det.id;
+
+            switch (id) {
+                case 21:
+                    return "GPP";
+                case 22:
+                    return "PGP";
+                case 23:
+                    return "PPG";
+            }
+        }
+
+        // If none matched
+        return "";
+    }
+
+
     public void displayDetectionTelemetry(AprilTagDetection detectedId) {
         if (detectedId == null) return;
         if (detectedId.metadata != null) {
