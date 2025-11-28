@@ -14,6 +14,10 @@ public class Contest extends MecanumDrive {
     public Contest(LinearOpMode opmode) {
         super(opmode);
 
+        a = hardwareMap.get(Servo.class, "a");
+        b = hardwareMap.get(Servo.class, "b");
 
+        c = hardwareMap.get(DcMotorEx.class, "c");
+        d = hardwareMap.get(DcMotorEx.class, "d");
     }
 }
