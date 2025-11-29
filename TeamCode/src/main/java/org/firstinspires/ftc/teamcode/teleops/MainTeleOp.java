@@ -85,10 +85,6 @@ public class MainTeleOp extends LinearOpMode {
 
 
     public void controlDriveTrain(Gamepad gamepad) {
-        // Same convention as existing StatesTeleOp:
-        //  throttle = left stick Y (no inversion),
-        //  strafe   = -left stick X (sign flip matches driver's preference),
-        //  rotate   = right stick X.
         double throttle = gamepad.left_stick_y;
         double strafe   = -gamepad.left_stick_x;
         double rotate   = gamepad.right_stick_x;
