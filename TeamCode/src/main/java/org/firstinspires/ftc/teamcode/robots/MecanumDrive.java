@@ -16,7 +16,7 @@ public abstract class MecanumDrive extends RobotBase implements DriveTrain { // 
 
     public DcMotorEx frontRight, frontLeft, backRight, backLeft;
     public DcMotorEx[] drivetrain;
-    public double maxDrivePower = 0.85;
+    public double maxDrivePower = 0.85; //we can change this if needed this is the max drive power
 
     public double rotateP = 3.5, rotateI = 0.4, rotateD = 0.2, rotateF = 0.3;
     public PIDFController rotatePIDF;
@@ -49,7 +49,7 @@ public abstract class MecanumDrive extends RobotBase implements DriveTrain { // 
 
     public MecanumDrive(LinearOpMode opModeInstance) {
         super(opModeInstance);
-
+    //here we see mapping to different parts of the robot
         frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         frontLeft  = hardwareMap.get(DcMotorEx.class, "frontLeft");
         backRight  = hardwareMap.get(DcMotorEx.class, "backRight");

@@ -62,6 +62,7 @@ public abstract class RobotBase {
      * healthy batteries charge to 14V, so to keep behavior consistent power should be scaled. Note
      * this uses the voltage read upon initialization, and does not re-read hub voltage. If voltage
      * is under 12 volts, no changes are made.
+     * is under 12 volts, no changes are made.
      * @param motorPower [0, 1]
      * @return
      */
