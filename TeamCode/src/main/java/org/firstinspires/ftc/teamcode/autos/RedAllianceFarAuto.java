@@ -3,15 +3,11 @@ package org.firstinspires.ftc.teamcode.autos;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.mechanisms.AprilTagWebcam;
 import org.firstinspires.ftc.teamcode.robots.BoBot;
 
 
-@Autonomous(name = "Main Auto", group = "Autos")
-public class MainAuto extends LinearOpMode {
-
-
-
+@Autonomous(name = "Red Alliance Far Zone Auto", group = "Autos")
+public class RedAllianceFarAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() {
@@ -21,7 +17,7 @@ public class MainAuto extends LinearOpMode {
         if (opModeIsActive()) {
             //first is distance, second is speed in ticks per second
             robot.forward(24, 800);
-           //sleep for a certain amt of time
+            //sleep for a certain amt of time
             sleep(500);
             robot.right(12, 800);
             sleep(500);

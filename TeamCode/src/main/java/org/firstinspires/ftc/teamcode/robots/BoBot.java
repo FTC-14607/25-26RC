@@ -85,7 +85,7 @@ public class BoBot extends MecanumDrive {
         intakeLower  = hardwareMap.get(DcMotorEx.class, "intakeLower");
         flywheel     = hardwareMap.get(DcMotorEx.class, "flywheel");
         barrierServo = hardwareMap.get(Servo.class, "barrierServo");
-        // hoodServo = hardwareMap.get(Servo.class, "rampServo");
+        hoodServo    = hardwareMap.get(Servo.class, "rampServo");
 
 
         intakeLower.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -137,12 +137,12 @@ public class BoBot extends MecanumDrive {
 
 
 
-    //public double getRampPos() {
-    //    return hoodServo.getPosition();
-    //}
+    public double getRampPos() {
+        return hoodServo.getPosition();
+    }
 
     public void setRampPos(double pos) {
-        //hoodServo.setPosition(clip(pos, RAMP_MIN_POS, RAMP_MAX_POS));
+        hoodServo.setPosition(clip(pos, RAMP_MIN_POS, RAMP_MAX_POS));
     }
 
     public void setRampNear() {setRampPos(RAMP_NEAR_POS);}
