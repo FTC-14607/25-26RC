@@ -4,18 +4,28 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.mechanisms.AprilTagWebcam;
+import org.firstinspires.ftc.teamcode.robots.BoBot;
 
 
 @Autonomous(name = "Main Auto", group = "Autos")
 public class MainAuto extends LinearOpMode {
 
-    AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
+
+
 
     @Override
     public void runOpMode() {
+        BoBot robot = new BoBot(this);
+        waitForStart();
 
-        aprilTagWebcam.init(hardwareMap, telemetry);
-
+        if (opModeIsActive()) {
+            //first is distance, second is speed in ticks per second
+            robot.forward(24, 800);
+           //sleep for a certain amt of time
+            sleep(500);
+            robot.right(12, 800);
+            sleep(500);
+        }
     }
-
 }
+

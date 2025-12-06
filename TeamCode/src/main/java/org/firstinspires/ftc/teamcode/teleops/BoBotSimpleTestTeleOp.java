@@ -31,11 +31,13 @@ public class BoBotSimpleTestTeleOp extends LinearOpMode {
             // --- Flywheel test (triggers) ---
             double flywheelPower = gamepad1.right_trigger - gamepad1.left_trigger;
             robot.setFlywheelPower(flywheelPower);
+            if (flywheelPower > 0) robot.setBumperClockwiseMax();
 
             // --- Emergency stop ---
             if (gamepad1.a) {
                 robot.stopFlywheel();
                 robot.stopIntake();
+
             }
 
             // Telemetry

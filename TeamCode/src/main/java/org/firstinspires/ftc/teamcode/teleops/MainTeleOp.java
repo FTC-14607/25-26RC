@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.robots.BoBot;
 public class MainTeleOp extends LinearOpMode {
 
     public BoBot robot;
+    public ElapsedTime shootTimer = new ElapsedTime();
 
     public static boolean showTelemetry = true;
 
@@ -71,7 +72,7 @@ public class MainTeleOp extends LinearOpMode {
     }
 
     private void initPositions() {
-       //intital positions, we assume its far
+        //intital positions, we assume its far
         shotMode = ShotMode.FAR;
         currentFlywheelPower = BoBot.FLYWHEEL_POWER_FAR;
 
@@ -141,14 +142,27 @@ public class MainTeleOp extends LinearOpMode {
         boolean bothTriggers = (gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5);
 
         if (bothTriggers) {
-            robot.setBarrierOpen();
             robot.setFlywheelPower(currentFlywheelPower);
-            if (intakeOn) {
-                robot.setIntakePower(BoBot.INTAKE_FEED_POWER);
+
+            if (shootTimer.milliseconds() > 2000) {
+                //robot.setBarrierOpen();
+
+                if (intakeOn) {
+                    robot.setIntakePower(BoBot.INTAKE_FEED_POWER);
+                }
+            } else {
+                //robot.setBarrierClosed();
+                if (intakeOn) {
+                    robot.setIntakePower(BoBot.INTAKE_POWER);
+                }
             }
+
         } else {
-            robot.setBarrierClosed();
+            shootTimer.reset();
+
+            //robot.setBarrierClosed();
             robot.stopFlywheel();
+
             if (intakeOn) {
                 robot.setIntakePower(BoBot.INTAKE_POWER);
             }

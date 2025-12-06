@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode.robots;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
@@ -12,7 +14,7 @@ public class BoBotSimple extends MecanumDrive {
 
     public DcMotorEx intakeLower;
     public DcMotorEx flywheel;
-    public Servo barrierServo;
+    public CRServo bumperServo;
 
     // Adjustable motor constants for testing
     public static double INTAKE_POWER = 0.8;
@@ -44,7 +46,7 @@ public class BoBotSimple extends MecanumDrive {
         STRAFE_MULTIPLIER            = 1.3;
         STRAIGHT_ROTATION_CORRECTION = 0;
         STRAFE_ROTATION_CORRECTION   = 0;
-
+        bumperServo = hardwareMap.get(CRServo.class, "bumperServo");
         // Map motors
         intakeLower  = hardwareMap.get(DcMotorEx.class, "intakeLower");
         flywheel     = hardwareMap.get(DcMotorEx.class, "flywheel");
@@ -88,11 +90,15 @@ public class BoBotSimple extends MecanumDrive {
     public void stopFlywheel() {
         flywheel.setPower(0.0);
     }
-    public void setBarrierClosed() {
-        barrierServo.setPosition(BARRIER_CLOSED);
+    public void setBumperSpeedNull() {
+        bumperServo.setPower(0.0);
     }
-
-    public void setBarrierOpen() {
-        barrierServo.setPosition(BARRIER_OPEN);
+    public void setBumperClockwiseMax() {
+        bumperServo.setDirection(DcMotorSimple.Direction.FORWARD);
+        bumperServo.setPower(1.0);
+    }
+    public void setBumperCounterClockwiseMax() {
+        bumperServo.setDirection(DcMotorSimple.Direction.REVERSE); 
+        bumperServo.setPower(1.0);  // full speed
     }
 }
