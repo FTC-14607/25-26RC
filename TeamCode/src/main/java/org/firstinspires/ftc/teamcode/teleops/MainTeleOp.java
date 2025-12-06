@@ -55,7 +55,7 @@ public class MainTeleOp extends LinearOpMode {
             controlRampAngle(gamepad1);
 
             // Gamepad2 stuff it controls, subject to change
-            controlIntake(gamepad2);
+            controlIntake(gamepad1);
             controlShooting(gamepad2);
             controlMaxSpeedDriveTrain(gamepad2);
 
@@ -181,14 +181,12 @@ public class MainTeleOp extends LinearOpMode {
         if (input != 0.0) {
             double deltaTime = loopTimer.time();
 
-            //double nextRampPos = robot.getRampPos() + input * deltaTime * RAMP_MAX_SPEED;
-            robot.setRampPos(0);
+            double nextRampPos = robot.getRampPos() + input * deltaTime * RAMP_MAX_SPEED;
+            robot.setRampPos(nextRampPos);
         }
     }
     public void controlMaxSpeedDriveTrain(Gamepad gamepad) {
-        if      (gamepad.dpad_down)  robot.maxDrivePower = 0.3;
-        else if (gamepad.dpad_left)  robot.maxDrivePower = 0.5;
-        else if (gamepad.dpad_up)    robot.maxDrivePower = 0.7;
-        else if (gamepad.dpad_right) robot.maxDrivePower = 0.9;
+        if      (gamepad.left_trigger > 0.5)  robot.maxDrivePower = 0.3;
+        else robot.maxDrivePower = 0.9;
     }
 }
