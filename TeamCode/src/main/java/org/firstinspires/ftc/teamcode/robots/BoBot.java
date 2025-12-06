@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode.robots;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @Config
@@ -16,9 +16,6 @@ public class BoBot extends MecanumDrive {
     //bottom intake motor
     public DcMotorEx intakeLower;
 
-    //upper intake motor
-    public DcMotorEx intakeUpper;
-
     //flywheel motor at the top
     public DcMotorEx flywheel;
 
@@ -26,7 +23,7 @@ public class BoBot extends MecanumDrive {
     public Servo barrierServo;
 
     //changing this causing a change in ramp angle
-    public Servo rampServo;
+    public Servo hoodServo;
 
     //endregion
 
@@ -44,11 +41,11 @@ public class BoBot extends MecanumDrive {
     //flywheel power for a far shot
     public static double FLYWHEEL_POWER_FAR = 0.9;
 
-    //barrier servo positioning for closed(not allowing balls to go through)
-    public static double BARRIER_CLOSED = 0.0;
 
-    //barrier servo positioning for open
-    public static double BARRIER_OPEN = 0.5;
+
+    // Barrier constants
+    public static double BARRIER_OPEN_POS = 1.0;
+    public static double BARRIER_CLOSED_POS = 0.2;
 
     //Ramp servo positioning for a near shot pls tune yall
     public static double RAMP_NEAR_POS = 0.35;
@@ -86,19 +83,16 @@ public class BoBot extends MecanumDrive {
         // Hardware mapping is right here, for programmers make sure they match up
 
         intakeLower  = hardwareMap.get(DcMotorEx.class, "intakeLower");
-        intakeUpper  = hardwareMap.get(DcMotorEx.class, "intakeUpper");
         flywheel     = hardwareMap.get(DcMotorEx.class, "flywheel");
         barrierServo = hardwareMap.get(Servo.class, "barrierServo");
-        rampServo    = hardwareMap.get(Servo.class, "rampServo");
+        // hoodServo = hardwareMap.get(Servo.class, "rampServo");
 
 
         intakeLower.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        intakeUpper.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         flywheel.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
 
         intakeLower.setDirection(DcMotorEx.Direction.FORWARD);
-        intakeUpper.setDirection(DcMotorEx.Direction.FORWARD);
         flywheel.setDirection(DcMotorEx.Direction.FORWARD);
 
 
@@ -119,7 +113,6 @@ public class BoBot extends MecanumDrive {
 
     public void setIntakePower(double power) {
         intakeLower.setPower(power);
-        intakeUpper.setPower(power);
     }
 
     public void stopIntake() {
@@ -135,28 +128,26 @@ public class BoBot extends MecanumDrive {
     }
 
     public void setBarrierClosed() {
-        barrierServo.setPosition(BARRIER_CLOSED);
+        barrierServo.setPosition(BARRIER_CLOSED_POS);
     }
 
     public void setBarrierOpen() {
-        barrierServo.setPosition(BARRIER_OPEN);
+        barrierServo.setPosition(BARRIER_OPEN_POS);
     }
 
-    public double getRampPos() {
-        return rampServo.getPosition();
-    }
+
+
+    //public double getRampPos() {
+    //    return hoodServo.getPosition();
+    //}
 
     public void setRampPos(double pos) {
-        rampServo.setPosition(clip(pos, RAMP_MIN_POS, RAMP_MAX_POS));
+        //hoodServo.setPosition(clip(pos, RAMP_MIN_POS, RAMP_MAX_POS));
     }
 
-    public void setRampNear() {
-        setRampPos(RAMP_NEAR_POS);
-    }
+    public void setRampNear() {setRampPos(RAMP_NEAR_POS);}
 
-    public void setRampFar() {
-        setRampPos(RAMP_FAR_POS);
-    }
+    public void setRampFar() {setRampPos(RAMP_FAR_POS);}
 
 
     //endregion

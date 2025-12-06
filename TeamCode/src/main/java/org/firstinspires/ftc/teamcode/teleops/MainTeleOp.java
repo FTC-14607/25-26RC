@@ -62,8 +62,7 @@ public class MainTeleOp extends LinearOpMode {
                 telemetry.addData("Shot Mode", shotMode);
                 telemetry.addData("Flywheel Power", currentFlywheelPower);
                 telemetry.addData("Intake On", intakeOn);
-                telemetry.addData("Barrier Pos", robot.barrierServo.getPosition());
-                telemetry.addData("Ramp Pos", robot.rampServo.getPosition());
+                telemetry.addData("Barrier Position", robot.barrierServo.getPosition());
                 telemetry.addData("Max Drive Power", robot.maxDrivePower);
                 telemetry.addData("Loop Speed (ms)", loopTimer.time() * 1000.0);
                 telemetry.update();
@@ -168,8 +167,8 @@ public class MainTeleOp extends LinearOpMode {
         if (input != 0.0) {
             double deltaTime = loopTimer.time();
 
-            double nextRampPos = robot.getRampPos() + input * deltaTime * RAMP_MAX_SPEED;
-            robot.setRampPos(nextRampPos);
+            //double nextRampPos = robot.getRampPos() + input * deltaTime * RAMP_MAX_SPEED;
+            robot.setRampPos(0);
         }
     }
     public void controlMaxSpeedDriveTrain(Gamepad gamepad) {
