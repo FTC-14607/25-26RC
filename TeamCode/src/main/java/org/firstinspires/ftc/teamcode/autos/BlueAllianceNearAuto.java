@@ -16,10 +16,10 @@ public class BlueAllianceNearAuto extends LinearOpMode {
 
         if (opModeIsActive()) {
             //first is distance, second is speed in ticks per second
-            robot.forward(24, 800);
+            sleep(24000);
+            robot.right(8,800);
+            robot.forward(48, 800);
             //sleep for a certain amt of time
-            sleep(500);
-            robot.right(12, 800);
             sleep(500);
         }
     }

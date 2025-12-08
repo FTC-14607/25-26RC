@@ -13,14 +13,15 @@ public class BlueAllianceFarAuto extends LinearOpMode {
     public void runOpMode() {
         BoBot robot = new BoBot(this);
         waitForStart();
-
+        //+0.2 so 5.2/5.0 -- 1.04
         if (opModeIsActive()) {
             //first is distance, second is speed in ticks per second
+            sleep(24000);
             robot.forward(24, 800);
-           //sleep for a certain amt of time
-            sleep(500);
-            robot.right(12, 800);
-            sleep(500);
+            sleep(200);
+            robot.right(5,800);
+            robot.forward(8,800);
+
         }
     }
 }

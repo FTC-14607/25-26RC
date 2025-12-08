@@ -16,6 +16,7 @@ public class RedAllianceNearAuto extends LinearOpMode {
 
         if (opModeIsActive()) {
             //first is distance, second is speed in ticks per second
+            sleep(24000);
             robot.forward(24, 800);
             //sleep for a certain amt of time
             sleep(500);

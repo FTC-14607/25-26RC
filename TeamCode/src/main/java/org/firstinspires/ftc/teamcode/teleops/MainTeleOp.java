@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.robots.BoBot;
 public class MainTeleOp extends LinearOpMode {
 
     public BoBot robot;
-    public ElapsedTime shootTimer = new ElapsedTime();
+    public ElapsedTime delayTimer = new ElapsedTime();
 
     public static boolean showTelemetry = true;
 
@@ -34,15 +34,19 @@ public class MainTeleOp extends LinearOpMode {
 
     private boolean dpadUpFirstInput = true;
     private boolean dpadDownFirstInput = true;
+    public ElapsedTime timerOffset = new ElapsedTime();
+
 
     @Override
     public void runOpMode() {
         robot = new BoBot(this);
         robot.maxDrivePower = 0.9;
 
+
         initPositions();
 
         waitForStart();
+
 
         while (opModeIsActive() && !isStopRequested()) {
             loopTimer.reset();
@@ -53,11 +57,13 @@ public class MainTeleOp extends LinearOpMode {
             controlDriveTrain(gamepad1);
             controlShotMode(gamepad1);
             controlRampAngle(gamepad1);
+            controlMaxSpeedDriveTrain(gamepad1);
 
             // Gamepad2 stuff it controls, subject to change
-            controlIntake(gamepad1);
+            controlIntake(gamepad2);
             controlShooting(gamepad2);
-            controlMaxSpeedDriveTrain(gamepad2);
+            controlBumperServo(gamepad2);
+
 
             if (showTelemetry) {
                 telemetry.addData("Shot Mode", shotMode);
@@ -66,6 +72,7 @@ public class MainTeleOp extends LinearOpMode {
                 telemetry.addData("Barrier Position", robot.barrierServo.getPosition());
                 telemetry.addData("Max Drive Power", robot.maxDrivePower);
                 telemetry.addData("Loop Speed (ms)", loopTimer.time() * 1000.0);
+
                 telemetry.update();
             }
         }
@@ -77,7 +84,7 @@ public class MainTeleOp extends LinearOpMode {
         currentFlywheelPower = BoBot.FLYWHEEL_POWER_FAR;
 
         robot.setBarrierClosed();
-        robot.setRampFar();
+        //robot.setRampFar();
         robot.stopFlywheel();
         robot.stopIntake();
     }
@@ -119,9 +126,11 @@ public class MainTeleOp extends LinearOpMode {
 
 
     private void controlIntake(Gamepad gamepad) {
-        boolean input = gamepad.x;
+        boolean posInput = gamepad.x;
+        boolean negInput = gamepad.b;
 
-        if (input) {
+
+        if (posInput) {
             if (intakeToggleFirstInput) {
                 intakeToggleFirstInput = false;
                 intakeOn = !intakeOn;
@@ -132,7 +141,19 @@ public class MainTeleOp extends LinearOpMode {
                     robot.stopIntake();
                 }
             }
-        } else {
+        } else if(negInput){
+            if (intakeToggleFirstInput) {
+                intakeToggleFirstInput = false;
+                intakeOn = !intakeOn;
+
+                if (intakeOn) {
+                    robot.setIntakePower(BoBot.INTAKE_POWER * -1);
+                } else {
+                    robot.stopIntake();
+                }
+            }
+        }
+        else {
             intakeToggleFirstInput = true;
         }
     }
@@ -142,32 +163,35 @@ public class MainTeleOp extends LinearOpMode {
         boolean bothTriggers = (gamepad.left_trigger > 0.5 && gamepad.right_trigger > 0.5);
 
         if (bothTriggers) {
+            // Turn flywheel on
+
             robot.setFlywheelPower(currentFlywheelPower);
 
-            if (shootTimer.milliseconds() > 2000) {
-                //robot.setBarrierOpen();
-
-                if (intakeOn) {
-                    robot.setIntakePower(BoBot.INTAKE_FEED_POWER);
-                }
-            } else {
-                //robot.setBarrierClosed();
-                if (intakeOn) {
-                    robot.setIntakePower(BoBot.INTAKE_POWER);
-                }
-            }
 
         } else {
-            shootTimer.reset();
 
-            //robot.setBarrierClosed();
+            // Turn flywheel off
+            timerOffset.reset();
+
             robot.stopFlywheel();
-
-            if (intakeOn) {
-                robot.setIntakePower(BoBot.INTAKE_POWER);
-            }
         }
     }
+    private void controlBumperServo(Gamepad gamepad){
+        boolean input = gamepad.y;
+        if (input){
+            robot.setBarrierClosed();
+            if (delayTimer.seconds() > 1.2)
+                robot.setBarrierOpen();
+
+        }
+        else{
+            robot.setBarrierOpen();
+            delayTimer.reset();
+        }
+
+    }
+
+
 
     private void controlRampAngle(Gamepad gamepad) {
         double input = 0.0;

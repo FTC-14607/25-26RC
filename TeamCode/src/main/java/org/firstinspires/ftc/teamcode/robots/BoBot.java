@@ -30,7 +30,7 @@ public class BoBot extends MecanumDrive {
     //TODO: PLEASE TUNE THESE FUCKING CONSTANTS ---- ASAP IT SHJOULDN'T BE THAT HARD
 
     //this is from floor(lower one), change based on time it takes as well as slippage
-    public static double INTAKE_POWER = 0.8;
+    public static double INTAKE_POWER = 0.6;
 
     //power used for intake feeding change based on time we have
     public static double INTAKE_FEED_POWER = 0.8;
@@ -39,7 +39,7 @@ public class BoBot extends MecanumDrive {
     public static double FLYWHEEL_POWER_NEAR = 0.6;
 
     //flywheel power for a far shot
-    public static double FLYWHEEL_POWER_FAR = 0.9;
+    public static double FLYWHEEL_POWER_FAR = 1.0;
 
 
 
