@@ -82,10 +82,15 @@ public class BoBot extends MecanumDrive {
 
         // Hardware mapping is right here, for programmers make sure they match up
 
+        //encoder section right her
+
+
+
         intakeLower  = hardwareMap.get(DcMotorEx.class, "intakeLower");
         flywheel     = hardwareMap.get(DcMotorEx.class, "flywheel");
         barrierServo = hardwareMap.get(Servo.class, "barrierServo");
         hoodServo    = hardwareMap.get(Servo.class, "rampServo");
+
 
 
         intakeLower.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
