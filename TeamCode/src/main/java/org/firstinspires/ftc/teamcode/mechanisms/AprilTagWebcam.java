@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import android.util.Size;
 
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -22,6 +23,7 @@ public class AprilTagWebcam {
     private List<AprilTagDetection> detectedTags = new ArrayList<>();
 
     private Telemetry telemetry;
+
 
     public void init(HardwareMap hwMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -102,4 +104,7 @@ public class AprilTagWebcam {
             visionPortal.close();
         }
     }
+
+
+
 }
