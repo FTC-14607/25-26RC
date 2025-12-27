@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 
 @Config
@@ -23,7 +25,11 @@ public class BoBot extends MecanumDrive {
     public Servo barrierServo;
 
     //changing this causing a change in ramp angle
-    public Servo hoodServo;
+    //public Servo hoodServo;
+    public CRServo hoodServo;
+    private double rampTarget = 0.0;
+    private double rampPosEstimate = 0.0;
+    private final ElapsedTime rampTimer = new ElapsedTime();
 
     //endregion
 
@@ -35,27 +41,46 @@ public class BoBot extends MecanumDrive {
     //power used for intake feeding change based on time we have
     public static double INTAKE_FEED_POWER = 0.8;
 
-    //flywheel power for a near shot
-    public static double FLYWHEEL_POWER_NEAR = 0.6;
+    // Flywheel velocity targets (encoder ticks/sec). These match the velocities used in your tuner
+    public static double TARGET_VELO_NEAR = 900;
+    public static double TARGET_VELO_FAR  = 1800;
 
-    //flywheel power for a far shot
-    public static double FLYWHEEL_POWER_FAR = 1.0;
-
-
+    // Flywheel PIDF
+    public static double
+            FLYWHEEL_F = 20.5998,
+            FLYWHEEL_P = 157.3564,
+            FLYWHEEL_I = 0.0,
+            FLYWHEEL_D = 0.0;
 
     // Barrier constants
     public static double BARRIER_OPEN_POS = 1.0;
     public static double BARRIER_CLOSED_POS = 0.2;
 
-    //Ramp servo positioning for a near shot pls tune yall
-    public static double RAMP_NEAR_POS = 0.35;
+    //Ramp constants to tune
+    /**
+     * RAMP PRESETS (virtual units, not 0..1)
+     * FAR is default on init.
+     * Tune these via dashboard OR by manual tuning (teleop writes back into these).
+     */
+    public static double RAMP_FAR_POS  = 0.0;
+    public static double RAMP_NEAR_POS = 1.0;
 
-    //Ramp servo positioning for a far shot pls tune yall
-    public static double RAMP_FAR_POS = 0.65;
+    // range limits for virtual units (allows for greater than 180 degrees)
+    public static double RAMP_MIN_POS = -10.0;
+    public static double RAMP_MAX_POS =  10.0;
 
-    //Min and max range for the ramp, subject to change based on the tread width
-    public static double RAMP_MIN_POS = 0.20;
-    public static double RAMP_MAX_POS = 0.80;
+    // ramp controller tuning
+    public static double RAMP_MOVE_POWER = 0.7;                  // power while moving
+    public static double RAMP_TOLERANCE  = 0.05;                 // virtual-units tolerance
+    public static double RAMP_UNITS_PER_SEC_AT_FULL_POWER = 1.0; // estimate scale
+
+    /**
+     * Optional "home to FAR" on init (OFF by default):
+     * If FAR is a safe hard stop, you can enable this so you always start from a known position.
+     */
+    public static boolean RAMP_HOME_ON_INIT = false;
+    public static double  RAMP_HOME_POWER = -0.6;   // flip sign if needed
+    public static double  RAMP_HOME_TIME_SEC = 0.6; // seconds
 
 
     public boolean showTelemetry = true;
@@ -81,40 +106,70 @@ public class BoBot extends MecanumDrive {
         STRAFE_ROTATION_CORRECTION   = 0;
 
         // Hardware mapping is right here, for programmers make sure they match up
-
-        //encoder section right her
-
-
-
         intakeLower  = hardwareMap.get(DcMotorEx.class, "intakeLower");
         flywheel     = hardwareMap.get(DcMotorEx.class, "flywheel");
         barrierServo = hardwareMap.get(Servo.class, "barrierServo");
-        hoodServo    = hardwareMap.get(Servo.class, "rampServo");
+        hoodServo    = hardwareMap.get(CRServo.class, "rampServo");
 
 
 
         intakeLower.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         flywheel.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-
-
         intakeLower.setDirection(DcMotorEx.Direction.FORWARD);
         flywheel.setDirection(DcMotorEx.Direction.FORWARD);
-
+        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        applyFlywheelPIDF();
 
         imu.resetYaw();
         updateOrientation();
 
         // default positioning for all these
         setBarrierClosed();
-        setRampFar();
+        initRamp();
         stopFlywheel();
         stopIntake();
     }
 
+    // ------------------------------------ CONTROL & SENSORS ----------------------------------------
+
+    /** Call every loop (matches JamalThree style). */
+    public void update() {
+        updateOrientation();
+    }
 
     public void updateOrientation() {
         orientation = imu.getRobotYawPitchRollAngles();
     }
+    // ------------------------------------ FLYWHEEL ----------------------------------------
+    private double lastFlywheelP = Double.NaN;
+    private double lastFlywheelI = Double.NaN;
+    private double lastFlywheelD = Double.NaN;
+    private double lastFlywheelF = Double.NaN;
+    public void applyFlywheelPIDF() {
+        if (FLYWHEEL_P != lastFlywheelP || FLYWHEEL_I != lastFlywheelI ||
+                FLYWHEEL_D != lastFlywheelD || FLYWHEEL_F != lastFlywheelF) {
+            PIDFCoefficients pidf = new PIDFCoefficients(FLYWHEEL_P, FLYWHEEL_I, FLYWHEEL_D, FLYWHEEL_F);
+            flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+            lastFlywheelP = FLYWHEEL_P;
+            lastFlywheelI = FLYWHEEL_I;
+            lastFlywheelD = FLYWHEEL_D;
+            lastFlywheelF = FLYWHEEL_F;
+        }
+    }
+    //encoder ticks/sec) for the following methods
+    public void setFlywheelVelocity(double velocityTicksPerSec) {
+        applyFlywheelPIDF();
+        flywheel.setVelocity(velocityTicksPerSec);
+    }
+
+    public double getFlywheelVelocity() {
+        return flywheel.getVelocity();
+    }
+
+    public void stopFlywheel() {
+        flywheel.setPower(0.0);
+    }
+    // ------------------------------------ INTAKE ----------------------------------------
 
     public void setIntakePower(double power) {
         intakeLower.setPower(power);
@@ -124,14 +179,7 @@ public class BoBot extends MecanumDrive {
         setIntakePower(0.0);
     }
 
-    public void setFlywheelPower(double power) {
-        flywheel.setPower(power);
-    }
-
-    public void stopFlywheel() {
-        flywheel.setPower(0.0);
-    }
-
+    // ------------------------------------ BARRIER ----------------------------------------
     public void setBarrierClosed() {
         barrierServo.setPosition(BARRIER_CLOSED_POS);
     }
@@ -140,20 +188,51 @@ public class BoBot extends MecanumDrive {
         barrierServo.setPosition(BARRIER_OPEN_POS);
     }
 
+    // ------------------------------------ RAMP / HOOD (CRSERVO) ----------------------------------------
+    /*
+        added the ability to have a home, not needed i believe
+    */
+    private void initRamp() {
+        if (RAMP_HOME_ON_INIT) {
+            hoodServo.setPower(clip(RAMP_HOME_POWER, -1.0, 1.0));
+            opMode.sleep((int) Math.round(RAMP_HOME_TIME_SEC * 1000.0));
+            hoodServo.setPower(0.0);
+        } else {
+            hoodServo.setPower(0.0);
+        }
+        // here we start it at the far position
+        rampTarget = clip(RAMP_FAR_POS, RAMP_MIN_POS, RAMP_MAX_POS);
+        rampPosEstimate = rampTarget;
+        rampTimer.reset();
+    }
 
-
+    public void updateRamp() {
+        double dt = rampTimer.seconds();
+        rampTimer.reset();
+        if (dt > 0.25) dt = 0.0;
+        double error = rampTarget - rampPosEstimate;
+        double power = 0.0;
+        if (Math.abs(error) > RAMP_TOLERANCE) {
+            power = Math.signum(error) * clip(RAMP_MOVE_POWER, 0.0, 1.0);
+        }
+        hoodServo.setPower(clip(power, -1.0, 1.0));
+        rampPosEstimate += power * dt * RAMP_UNITS_PER_SEC_AT_FULL_POWER;
+        rampPosEstimate = clip(rampPosEstimate, RAMP_MIN_POS, RAMP_MAX_POS);
+    }
     public double getRampPos() {
-        return hoodServo.getPosition();
+        return rampTarget;
     }
-
+    public double getRampPosEstimate() {
+        return rampPosEstimate;
+    }
     public void setRampPos(double pos) {
-        hoodServo.setPosition(clip(pos, RAMP_MIN_POS, RAMP_MAX_POS));
+        rampTarget = clip(pos, RAMP_MIN_POS, RAMP_MAX_POS);
     }
-
-    public void setRampNear() {setRampPos(RAMP_NEAR_POS);}
-
-    public void setRampFar() {setRampPos(RAMP_FAR_POS);}
-
-
+    public void setRampNear() { setRampPos(RAMP_NEAR_POS); }
+    public void setRampFar()  { setRampPos(RAMP_FAR_POS); }
+    public void stopRamp() {
+        rampTarget = rampPosEstimate;
+        hoodServo.setPower(0.0);
+    }
     //endregion
 }
