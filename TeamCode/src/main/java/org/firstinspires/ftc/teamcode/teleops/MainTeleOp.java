@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.robots.BoBot;
 @TeleOp(name = "BoBot MainTeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    //region teleop constants (style like StatesTeleOp)
+    //region teleop constants
     public static double RAMP_MAX_SPEED = 0.6; // virtual units / sec
     public static boolean showTelemetry = true;
     //endregion
@@ -128,19 +128,15 @@ public class MainTeleOp extends LinearOpMode {
     }
     public void controlRampAngle(Gamepad gamepad, double dt) {
         double input = 0.0;
-
         if (gamepad.dpad_right) input = 1.0;
         else if (gamepad.dpad_left) input = -1.0;
-
         if (input != 0.0) {
-
             double nextRampPos = robot.getRampPos() + input * dt * RAMP_MAX_SPEED;
             robot.setRampPos(nextRampPos);
-
-
             if (shotMode == ShotMode.FAR) {
                 BoBot.RAMP_FAR_POS = robot.getRampPos();
-            } else {
+            }
+            else {
                 BoBot.RAMP_NEAR_POS = robot.getRampPos();
             }
         }
@@ -190,7 +186,6 @@ public class MainTeleOp extends LinearOpMode {
 
 
         } else {
-
             // Turn flywheel off
             shootingOn = false;
             timerOffset.reset();

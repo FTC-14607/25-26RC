@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @Config
 public class BoBot extends MecanumDrive {
 
-    //hardware start region
+
 
     //bottom intake motor
     public DcMotorEx intakeLower;
@@ -21,11 +21,11 @@ public class BoBot extends MecanumDrive {
     //flywheel motor at the top
     public DcMotorEx flywheel;
 
-    // Binary servo purpose (1: yes it goes up ramp, 0: blocks it)
+    // Binary servo purpose
     public Servo barrierServo;
 
     //changing this causing a change in ramp angle
-    //public Servo hoodServo;
+    //public Servo hoodServo; -- changed reprogrammed to a continuous servo using axon servo programmer
     public CRServo hoodServo;
     private double rampTarget = 0.0;
     private double rampPosEstimate = 0.0;
@@ -33,7 +33,7 @@ public class BoBot extends MecanumDrive {
 
     //endregion
 
-    //TODO: PLEASE TUNE THESE FUCKING CONSTANTS ---- ASAP IT SHJOULDN'T BE THAT HARD
+    //TODO: Make sure to find a good target velocity for near and far.
 
     //this is from floor(lower one), change based on time it takes as well as slippage
     public static double INTAKE_POWER = 0.6;
@@ -41,7 +41,7 @@ public class BoBot extends MecanumDrive {
     //power used for intake feeding change based on time we have
     public static double INTAKE_FEED_POWER = 0.8;
 
-    // Flywheel velocity targets (encoder ticks/sec). These match the velocities used in your tuner
+    // Flywheel velocity targets units: (encoder ticks/sec)
     public static double TARGET_VELO_NEAR = 900;
     public static double TARGET_VELO_FAR  = 1800;
 
@@ -53,34 +53,34 @@ public class BoBot extends MecanumDrive {
             FLYWHEEL_D = 0.0;
 
     // Barrier constants
+
     public static double BARRIER_OPEN_POS = 1.0;
     public static double BARRIER_CLOSED_POS = 0.2;
 
     //Ramp constants to tune
     /**
-     * RAMP PRESETS (virtual units, not 0..1)
-     * FAR is default on init.
-     * Tune these via dashboard OR by manual tuning (teleop writes back into these).
+     Make sure to change ranges, these are units i created using change in time, as its not positional anymore
      */
     public static double RAMP_FAR_POS  = 0.0;
     public static double RAMP_NEAR_POS = 1.0;
 
-    // range limits for virtual units (allows for greater than 180 degrees)
+    // these are the max and min pos with the new units change so there is a hardstop and doesnt break ramp
     public static double RAMP_MIN_POS = -10.0;
     public static double RAMP_MAX_POS =  10.0;
 
     // ramp controller tuning
-    public static double RAMP_MOVE_POWER = 0.7;                  // power while moving
-    public static double RAMP_TOLERANCE  = 0.05;                 // virtual-units tolerance
+    public static double RAMP_MOVE_POWER = 0.7;
+    public static double RAMP_TOLERANCE  = 0.05; //tolerance might remove/might make more exact
     public static double RAMP_UNITS_PER_SEC_AT_FULL_POWER = 1.0; // estimate scale
 
     /**
-     * Optional "home to FAR" on init (OFF by default):
-     * If FAR is a safe hard stop, you can enable this so you always start from a known position.
-     */
+     * Added this as it might be good to have a home target but not sure. ALSO BEFORE U CODE IDEA 1:
+     * CREATE A LOOKUP TABLE THAT MATCHES VELOCITY FOR THE FLYWHEEL WITH ANGLES FOR THE ramp so that when the
+     * ramp angle changes, so does the flywheel velocity
+     * */
     public static boolean RAMP_HOME_ON_INIT = false;
-    public static double  RAMP_HOME_POWER = -0.6;   // flip sign if needed
-    public static double  RAMP_HOME_TIME_SEC = 0.6; // seconds
+    public static double  RAMP_HOME_POWER = -0.6;
+    public static double  RAMP_HOME_TIME_SEC = 0.6;
 
 
     public boolean showTelemetry = true;
@@ -132,7 +132,7 @@ public class BoBot extends MecanumDrive {
 
     // ------------------------------------ CONTROL & SENSORS ----------------------------------------
 
-    /** Call every loop (matches JamalThree style). */
+
     public void update() {
         updateOrientation();
     }
@@ -140,7 +140,7 @@ public class BoBot extends MecanumDrive {
     public void updateOrientation() {
         orientation = imu.getRobotYawPitchRollAngles();
     }
-    // ------------------------------------ FLYWHEEL ----------------------------------------
+    // ------------------------------------ FLYWHEEL----------------------------------------
     private double lastFlywheelP = Double.NaN;
     private double lastFlywheelI = Double.NaN;
     private double lastFlywheelD = Double.NaN;
@@ -169,7 +169,7 @@ public class BoBot extends MecanumDrive {
     public void stopFlywheel() {
         flywheel.setPower(0.0);
     }
-    // ------------------------------------ INTAKE ----------------------------------------
+    // ------------------------------------INTAKE ----------------------------------------
 
     public void setIntakePower(double power) {
         intakeLower.setPower(power);
@@ -179,7 +179,7 @@ public class BoBot extends MecanumDrive {
         setIntakePower(0.0);
     }
 
-    // ------------------------------------ BARRIER ----------------------------------------
+    // ------------------------------------ BARRIER----------------------------------------
     public void setBarrierClosed() {
         barrierServo.setPosition(BARRIER_CLOSED_POS);
     }
@@ -188,9 +188,9 @@ public class BoBot extends MecanumDrive {
         barrierServo.setPosition(BARRIER_OPEN_POS);
     }
 
-    // ------------------------------------ RAMP / HOOD (CRSERVO) ----------------------------------------
+    // ------------------------------------ RAMP/HOOD----------------------------------------
     /*
-        added the ability to have a home, not needed i believe
+        added the ability to have a home, not needed i believe but just there
     */
     private void initRamp() {
         if (RAMP_HOME_ON_INIT) {
