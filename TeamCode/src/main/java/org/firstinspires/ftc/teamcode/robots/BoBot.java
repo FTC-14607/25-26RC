@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-
+//TODO: Implement auto turning on our robot so that it auto-turns to a specific heading with the press of a button, and then shoots. 
 @Config
 public class BoBot extends MecanumDrive {
 
