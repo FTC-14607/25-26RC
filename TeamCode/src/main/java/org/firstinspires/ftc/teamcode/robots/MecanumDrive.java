@@ -11,6 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 /**
  * Robot with nothing but four mecanum wheels, and (optional) built-in encoders.
  */
+
+//changes made to all the rotate pidf constants, and the constants for the encoder based movments, it all works now from a tele standpoint.
 @Config
 public abstract class MecanumDrive extends RobotBase implements DriveTrain { // TODO: samplemecanumdrive?
 

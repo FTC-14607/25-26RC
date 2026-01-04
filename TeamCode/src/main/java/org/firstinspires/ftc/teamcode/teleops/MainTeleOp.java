@@ -13,84 +13,90 @@ import org.firstinspires.ftc.teamcode.robots.BoBot;
 @TeleOp(name = "BoBot MainTeleOp", group = "Main")
 public class MainTeleOp extends LinearOpMode {
 
-    public BoBot robot;
-    public ElapsedTime delayTimer = new ElapsedTime();
-
+    //region teleop constants
+    public static double RAMP_MAX_SPEED = 0.6; // virtual units / sec
     public static boolean showTelemetry = true;
+    //endregion
 
-    public static double RAMP_MAX_SPEED = 0.6;
+    //region state
+    public BoBot robot;
 
-    private ElapsedTime loopTimer = new ElapsedTime();
-
+    public ElapsedTime delayTimer = new ElapsedTime();
+    public ElapsedTime loopTimer = new ElapsedTime();
+    public ElapsedTime timerOffset = new ElapsedTime();
 
     private boolean intakeToggleFirstInput = true;
     private boolean intakeOn = false;
-
+    private boolean shootingOn = false;
 
     public enum ShotMode { NEAR, FAR }
-
     private ShotMode shotMode = ShotMode.FAR;
-    private double currentFlywheelPower = BoBot.FLYWHEEL_POWER_FAR;
+
+    private double currentFlywheelVelocity = BoBot.TARGET_VELO_FAR;
 
     private boolean dpadUpFirstInput = true;
     private boolean dpadDownFirstInput = true;
-    public ElapsedTime timerOffset = new ElapsedTime();
-
-
+    //endregion
     @Override
     public void runOpMode() {
         robot = new BoBot(this);
         robot.maxDrivePower = 0.9;
-
-
         initPositions();
-
+        loopTimer.reset();
         waitForStart();
-
-
         while (opModeIsActive() && !isStopRequested()) {
+            double dt = loopTimer.seconds();
             loopTimer.reset();
 
-            robot.updateOrientation();
+            robot.update();
+
 
             //Gamepad1 stuff it controls, subject to change
-            controlDriveTrain(gamepad1);
+
             controlShotMode(gamepad1);
-            controlRampAngle(gamepad1);
             controlMaxSpeedDriveTrain(gamepad1);
+            controlRampAngle(gamepad1, dt);
 
             // Gamepad2 stuff it controls, subject to change
+            controlDriveTrain(gamepad2);
             controlIntake(gamepad2);
             controlShooting(gamepad2);
-            controlBumperServo(gamepad2);
+            //controlBumperServo(gamepad2);
+            robot.updateRamp();
+
 
 
             if (showTelemetry) {
                 telemetry.addData("Shot Mode", shotMode);
-                telemetry.addData("Flywheel Power", currentFlywheelPower);
+                telemetry.addData("Flywheel Target Velo", currentFlywheelVelocity);
+                telemetry.addData("Flywheel Velo", "%.1f", robot.getFlywheelVelocity());
                 telemetry.addData("Intake On", intakeOn);
+
+                telemetry.addData("Ramp Target", "%.3f", robot.getRampPos());
+                telemetry.addData("Ramp Est", "%.3f", robot.getRampPosEstimate());
+                telemetry.addData("Ramp FAR preset", "%.3f", BoBot.RAMP_FAR_POS);
+                telemetry.addData("Ramp NEAR preset", "%.3f", BoBot.RAMP_NEAR_POS);
+
                 telemetry.addData("Barrier Position", robot.barrierServo.getPosition());
                 telemetry.addData("Max Drive Power", robot.maxDrivePower);
-                telemetry.addData("Loop Speed (ms)", loopTimer.time() * 1000.0);
-
+                telemetry.addData("Loop Speed", "%5.2f ms", loopTimer.time() * 1000.0);
                 telemetry.update();
             }
         }
     }
 
-    private void initPositions() {
-        //intital positions, we assume its far
+    //region init
+    public void initPositions() {
+        // initial positions, assume FAR
         shotMode = ShotMode.FAR;
-        currentFlywheelPower = BoBot.FLYWHEEL_POWER_FAR;
+        currentFlywheelVelocity = BoBot.TARGET_VELO_FAR;
 
         robot.setBarrierClosed();
-        //robot.setRampFar();
+        robot.setRampFar();
         robot.stopFlywheel();
         robot.stopIntake();
     }
-
-
-
+    //endregion
     public void controlDriveTrain(Gamepad gamepad) {
         double throttle = gamepad.left_stick_y;
         double strafe   = -gamepad.left_stick_x;
@@ -98,14 +104,12 @@ public class MainTeleOp extends LinearOpMode {
 
         robot.drive(throttle, strafe, rotate);
     }
-
-
-    private void controlShotMode(Gamepad gamepad) {
+    public void controlShotMode(Gamepad gamepad) {
         if (gamepad.dpad_up) {
             if (dpadUpFirstInput) {
                 dpadUpFirstInput = false;
                 shotMode = ShotMode.FAR;
-                currentFlywheelPower = BoBot.FLYWHEEL_POWER_FAR;
+                currentFlywheelVelocity = BoBot.TARGET_VELO_FAR;
                 robot.setRampFar();
             }
         } else {
@@ -116,14 +120,28 @@ public class MainTeleOp extends LinearOpMode {
             if (dpadDownFirstInput) {
                 dpadDownFirstInput = false;
                 shotMode = ShotMode.NEAR;
-                currentFlywheelPower = BoBot.FLYWHEEL_POWER_NEAR;
+                currentFlywheelVelocity = BoBot.TARGET_VELO_NEAR;
                 robot.setRampNear();
             }
         } else {
             dpadDownFirstInput = true;
         }
     }
-
+    public void controlRampAngle(Gamepad gamepad, double dt) {
+        double input = 0.0;
+        if (gamepad.dpad_right) input = 1.0;
+        else if (gamepad.dpad_left) input = -1.0;
+        if (input != 0.0) {
+            double nextRampPos = robot.getRampPos() + input * dt * RAMP_MAX_SPEED;
+            robot.setRampPos(nextRampPos);
+            if (shotMode == ShotMode.FAR) {
+                BoBot.RAMP_FAR_POS = robot.getRampPos();
+            }
+            else {
+                BoBot.RAMP_NEAR_POS = robot.getRampPos();
+            }
+        }
+    }
 
     private void controlIntake(Gamepad gamepad) {
         boolean posInput = gamepad.x;
@@ -164,13 +182,13 @@ public class MainTeleOp extends LinearOpMode {
 
         if (bothTriggers) {
             // Turn flywheel on
-
-            robot.setFlywheelPower(currentFlywheelPower);
+            shootingOn = true;
+            robot.setFlywheelVelocity(currentFlywheelVelocity);
 
 
         } else {
-
             // Turn flywheel off
+            shootingOn = false;
             timerOffset.reset();
 
             robot.stopFlywheel();
@@ -190,27 +208,13 @@ public class MainTeleOp extends LinearOpMode {
         }
 
     }
-
-
-
-    private void controlRampAngle(Gamepad gamepad) {
-        double input = 0.0;
-
-        if (gamepad.dpad_right) {
-            input = 1.0;
-        } else if (gamepad.dpad_left) {
-            input = -1.0;
-        }
-
-        if (input != 0.0) {
-            double deltaTime = loopTimer.time();
-
-            double nextRampPos = robot.getRampPos() + input * deltaTime * RAMP_MAX_SPEED;
-            robot.setRampPos(nextRampPos);
-        }
+    public void controlMaxSpeedDriveTrain(Gamepad gamepad)
+    {
+        // change max drive power
+        if      (gamepad.dpad_down) robot.maxDrivePower = 0.3;
+        else if (gamepad.dpad_left) robot.maxDrivePower = 0.5;
+        else if (gamepad.dpad_up) robot.maxDrivePower = 0.7;
+        else if (gamepad.dpad_right) robot.maxDrivePower = 0.9;
     }
-    public void controlMaxSpeedDriveTrain(Gamepad gamepad) {
-        if      (gamepad.left_trigger > 0.5)  robot.maxDrivePower = 0.3;
-        else robot.maxDrivePower = 0.9;
-    }
+
 }
