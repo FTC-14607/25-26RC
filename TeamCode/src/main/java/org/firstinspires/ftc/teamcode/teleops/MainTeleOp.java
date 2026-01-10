@@ -34,6 +34,11 @@ public class MainTeleOp extends LinearOpMode {
 
     private double currentFlywheelVelocity = BoBot.TARGET_VELO_FAR;
 
+    //given lookup table to change our flywheel velocity to
+    private double [] flywheelVelocityLookup  = {600,1200,1600,2000};
+
+
+
     private boolean dpadUpFirstInput = true;
     private boolean dpadDownFirstInput = true;
     //endregion
@@ -52,13 +57,13 @@ public class MainTeleOp extends LinearOpMode {
 
 
             //Gamepad1 stuff it controls, subject to change
-
-            controlShotMode(gamepad1);
+            controlDriveTrain(gamepad1);
+            //controlShotMode(gamepad1);
             controlMaxSpeedDriveTrain(gamepad1);
-            controlRampAngle(gamepad1, dt);
+            controlRampAngle(gamepad2, dt);
 
             // Gamepad2 stuff it controls, subject to change
-            controlDriveTrain(gamepad2);
+
             controlIntake(gamepad2);
             controlShooting(gamepad2);
             //controlBumperServo(gamepad2);
@@ -127,10 +132,24 @@ public class MainTeleOp extends LinearOpMode {
             dpadDownFirstInput = true;
         }
     }
+    /*
+    public void controlShotPower(Gamepad gamepad){
+        int indexCurr = 0;
+        if (gamepad.dpad_up){
+
+        }
+        else if(gamepad.dpad_down){
+            indexCurr -= 1;
+
+        }
+
+    }
+    */
+
     public void controlRampAngle(Gamepad gamepad, double dt) {
         double input = 0.0;
-        if (gamepad.dpad_right) input = 1.0;
-        else if (gamepad.dpad_left) input = -1.0;
+        if (gamepad.dpad_up) input = 1.0;
+        else if (gamepad.dpad_down) input = -1.0;
         if (input != 0.0) {
             double nextRampPos = robot.getRampPos() + input * dt * RAMP_MAX_SPEED;
             robot.setRampPos(nextRampPos);
@@ -210,11 +229,12 @@ public class MainTeleOp extends LinearOpMode {
     }
     public void controlMaxSpeedDriveTrain(Gamepad gamepad)
     {
+        boolean leftTriggerHeld = gamepad.left_trigger>0.5;
         // change max drive power
-        if      (gamepad.dpad_down) robot.maxDrivePower = 0.3;
-        else if (gamepad.dpad_left) robot.maxDrivePower = 0.5;
-        else if (gamepad.dpad_up) robot.maxDrivePower = 0.7;
-        else if (gamepad.dpad_right) robot.maxDrivePower = 0.9;
+        if(leftTriggerHeld)
+            robot.maxDrivePower = 0.3;
+        else
+            robot.maxDrivePower = 0.9;
     }
 
 }
