@@ -60,10 +60,10 @@ public class MainTeleOp extends LinearOpMode {
             controlDriveTrain(gamepad1);
             //controlShotMode(gamepad1);
             controlMaxSpeedDriveTrain(gamepad1);
-            controlRampAngle(gamepad2, dt);
+
 
             // Gamepad2 stuff it controls, subject to change
-
+            controlRampAngle(gamepad2, dt);
             controlIntake(gamepad2);
             controlShooting(gamepad2);
             //controlBumperServo(gamepad2);

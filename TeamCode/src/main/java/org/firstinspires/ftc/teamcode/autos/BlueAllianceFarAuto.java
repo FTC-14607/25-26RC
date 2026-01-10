@@ -16,10 +16,11 @@ public class BlueAllianceFarAuto extends LinearOpMode {
         //+0.2 so 5.2/5.0 -- 1.04
         if (opModeIsActive()) {
             //first is distance, second is speed in ticks per second
-            sleep(24000);
-            robot.forward(24, 800);
-            sleep(200);
-            robot.right(5,800);
+            //dont sleep now
+            sleep(500);
+            robot.forward(81.9, 800);
+            sleep(100);
+            robot.rotate(15);
             robot.forward(8,800);
 
         }

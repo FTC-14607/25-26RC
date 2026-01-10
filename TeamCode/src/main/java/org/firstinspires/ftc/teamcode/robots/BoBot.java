@@ -13,8 +13,6 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @Config
 public class BoBot extends MecanumDrive {
 
-
-
     //bottom intake motor
     public DcMotorEx intakeLower;
 
