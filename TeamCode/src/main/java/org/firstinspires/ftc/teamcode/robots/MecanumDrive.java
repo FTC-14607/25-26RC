@@ -283,43 +283,60 @@ public abstract class MecanumDrive extends RobotBase implements DriveTrain { // 
      * @param degrees angle to rotate to in degrees, SHOULD BE BETWEEN -180 AND 180
      */
     public void rotate(double degrees) {
-        double motorSpeed;
+        // IMPORTANT: if we just drove using RUN_TO_POSITION, motors are still in that mode.
+        // Rotation with setVelocity() will not behave correctly unless we exit RUN_TO_POSITION.
+        setRunMode(drivetrain, DcMotor.RunMode.RUN_USING_ENCODER);
 
         orientation = imu.getRobotYawPitchRollAngles();
-        double lastAngle = -orientation.getYaw(AngleUnit.DEGREES);
+        double currentAngle = -orientation.getYaw(AngleUnit.DEGREES);
 
-        degrees += lastAngle;
-        boolean flip = degrees > 179 || degrees < -179;
-        boolean sign = lastAngle >= 0; // true if angle positive, false if negative
+        double targetAngle = degrees + currentAngle;
+
+        boolean flip = targetAngle > 179 || targetAngle < -179;
+        boolean sign = currentAngle >= 0;
+
         rotatePIDF.reset();
-        rotatePIDF.setSetPoint(degrees);
-        do {
-            orientation = imu.getRobotYawPitchRollAngles();
-            lastAngle = -orientation.getYaw(AngleUnit.DEGREES);
+        rotatePIDF.setSetPoint(targetAngle);
 
+        long start = System.nanoTime();
+        final long TIMEOUT_NS = 4_000_000_000L; // 4 seconds safety timeout
+
+        while (opMode.opModeIsActive() && !opMode.isStopRequested() && !rotatePIDF.atSetPoint()) {
+            orientation = imu.getRobotYawPitchRollAngles();
+            currentAngle = -orientation.getYaw(AngleUnit.DEGREES);
+
+            // handle wrap around the -180/180 boundary
             if (flip) {
-                // if angle was originally positive but the current angle is negative
-                // add 360 to flip the sign
-                if (sign && lastAngle < 0) lastAngle += 360;
-                else if (!sign && lastAngle > 0) lastAngle -= 360;
+                if (sign && currentAngle < 0) currentAngle += 360;
+                else if (!sign && currentAngle > 0) currentAngle -= 360;
             }
-            motorSpeed = rotatePIDF.calculate(lastAngle);
-            telemetry.addData("Motor Speed", motorSpeed);
-            telemetry.addData("degrees", degrees);
-            telemetry.addData("current angle", lastAngle);
-            telemetry.addData("flip", flip);
-            telemetry.addData("sign", sign);
-            telemetry.update();
+
+            double motorSpeed = rotatePIDF.calculate(currentAngle);
+
+            if (showTelemetry) {
+                telemetry.addData("Motor Speed", motorSpeed);
+                telemetry.addData("targetAngle", targetAngle);
+                telemetry.addData("currentAngle", currentAngle);
+                telemetry.addData("flip", flip);
+                telemetry.addData("sign", sign);
+                telemetry.update();
+            }
+
             frontRight.setVelocity(-motorSpeed);
             frontLeft.setVelocity(motorSpeed);
             backRight.setVelocity(-motorSpeed);
             backLeft.setVelocity(motorSpeed);
 
-        } while (!rotatePIDF.atSetPoint());
-        //make sure motors stop
-        for(DcMotorEx m : drivetrain) m.setVelocity(0);
+            // never hang forever
+            if (System.nanoTime() - start > TIMEOUT_NS) break;
+
+            opMode.idle();
+        }
+
+        for (DcMotorEx m : drivetrain) m.setVelocity(0);
         rotatePIDF.reset();
     }
+
 
 
 }
